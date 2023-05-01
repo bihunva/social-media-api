@@ -19,7 +19,18 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return get_user_model().objects.create_user(**validated_data)
 
 
-class UserManageSerializer(serializers.ModelSerializer):
+class UserDetailSerializer(serializers.ModelSerializer):
+    subscribed_to = serializers.SlugRelatedField(
+        slug_field="username",
+        many=True,
+        read_only=True
+    )
+    subscribers = serializers.SlugRelatedField(
+        slug_field="username",
+        many=True,
+        read_only=True
+    )
+
     class Meta:
         model = get_user_model()
         fields = (
@@ -31,8 +42,13 @@ class UserManageSerializer(serializers.ModelSerializer):
             "bio",
             "avatar",
             "subscribed_to",
+            "subscribers",
             "is_staff"
         )
+
+
+class UserManageSerializer(UserDetailSerializer):
+    class Meta(UserDetailSerializer.Meta):
         read_only_fields = ("id", "is_staff", "subscribed_to")
 
     def update(self, instance, validated_data):
@@ -61,31 +77,3 @@ class UserListSerializer(serializers.ModelSerializer):
 
     def get_subscribers_number(self, obj):
         return obj.subscribers.count()
-
-
-class UserDetailSerializer(serializers.ModelSerializer):
-    subscribed_to = serializers.SlugRelatedField(
-        slug_field="username",
-        many=True,
-        read_only=True
-    )
-    subscribers = serializers.SlugRelatedField(
-        slug_field="username",
-        many=True,
-        read_only=True
-    )
-
-    class Meta:
-        model = get_user_model()
-        fields = (
-            "id",
-            "email",
-            "username",
-            "first_name",
-            "last_name",
-            "bio",
-            "avatar",
-            "subscribed_to",
-            "subscribers",
-            "is_staff"
-        )
