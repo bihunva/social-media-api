@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
-from rest_framework import generics, mixins, viewsets
+from rest_framework import generics, mixins, viewsets, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from users.serializers import (
@@ -45,3 +47,31 @@ class UserViewSet(
             return UserDetailSerializer
 
         return UserListSerializer
+
+    @action(
+        detail=True,
+        methods=["GET"],
+        permission_classes=[IsAuthenticated],
+        authentication_classes=[JWTAuthentication],
+        url_path="follow"
+    )
+    def follow_unfollow(self, request, pk=None) -> Response:
+        user_to_follow = self.get_object()
+
+        if user_to_follow == request.user:
+            return Response(
+                {"error": "You cannot follow/unfollow yourself."},
+                status=status.HTTP_400_BAD_REQUEST)
+
+        is_following = request.user in user_to_follow.subscribers.all()
+
+        if is_following:
+            user_to_follow.subscribers.remove(request.user)
+        else:
+            user_to_follow.subscribers.add(request.user)
+
+        serializer = UserDetailSerializer(user_to_follow)
+
+        return Response(
+            {"is_following": not is_following, "user": serializer.data}
+        )
