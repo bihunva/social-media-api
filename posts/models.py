@@ -13,5 +13,8 @@ class Post(models.Model):
         related_name="posts"
     )
 
+    class Meta:
+        ordering = ["-created_at"]
+
     def __str__(self) -> str:
         return self.title
