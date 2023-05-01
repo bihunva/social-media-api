@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import generics, mixins, viewsets, status
+from rest_framework import generics, mixins, viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -32,15 +32,8 @@ class UserViewSet(
     viewsets.GenericViewSet,
 ):
     queryset = get_user_model().objects.all()
-
-    def get_queryset(self):
-        queryset = self.queryset
-        username = self.request.query_params.get("username")
-
-        if username:
-            return queryset.filter(username=username)
-
-        return queryset
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("username",)
 
     def get_serializer_class(self):
         if self.action == "retrieve":
